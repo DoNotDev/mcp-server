@@ -1,0 +1,57 @@
+{
+  "name": "@donotdev/mcp-server",
+  "version": "0.1.42",
+  "description": "MCP server for DoNotDev component type lookups",
+  "type": "module",
+  "private": false,
+  "bin": {
+    "@donotdev/mcp-server": "./dist/index.js",
+    "donotdev-mcp": "./dist/index.js"
+  },
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "guidelines",
+    "wai-way",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "dn bundle --package @donotdev/mcp-server",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "clean": "rimraf dist tsconfig.tsbuildinfo",
+    "type-check": "bunx tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.14",
+    "typescript": "^5.8.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SkillsAreImba/dndev.git",
+    "directory": "packages/mcp-server"
+  },
+  "keywords": [
+    "dndev",
+    "mcp",
+    "model-context-protocol",
+    "typescript",
+    "component-lookup"
+  ],
+  "author": "AMBROISE PARK Consulting",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  }
+}

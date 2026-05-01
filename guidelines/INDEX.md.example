@@ -1,0 +1,48 @@
+# DoNotDev MCP reference (guidelines)
+
+## For AI agents
+
+1. **Root `AGENTS.md`** — read first (workflow, rules, CLI).
+2. **`get_guideline("AGENT_START_HERE")`** or this file: [AGENT_START_HERE.md](./AGENT_START_HERE.md) — MCP verification and first calls.
+3. **`get_guideline(...)`** — package topics, setup docs here, and WAI-WAY templates; use **`search_framework`** to explore.
+
+Project skills live under **`.claude/skills/`** (e.g. `/brainstorm`, `/design`, `/build`, `/polish`). They are optional slash shortcuts; the same work is driven by **`start_phase` / `complete_phase`** in `AGENTS.md`.
+
+---
+
+## Getting started (humans)
+
+- [AGENT_START_HERE.md](./AGENT_START_HERE.md) — MCP + phase checklist
+- [SETUP_FIREBASE.md](./SETUP_FIREBASE.md) — Firebase (`dndev coach` → `dndev setup`)
+- [SETUP_SUPABASE.md](./SETUP_SUPABASE.md) — Supabase (`dndev coach` → `dndev setup`)
+
+---
+
+## Feature setup
+
+- [SETUP_AUTH.md](./SETUP_AUTH.md)
+- [SETUP_OAUTH.md](./SETUP_OAUTH.md)
+- [SETUP_OAUTH_PROVIDERS.md](./SETUP_OAUTH_PROVIDERS.md)
+- [SETUP_BILLING.md](./SETUP_BILLING.md)
+- [SETUP_STRIPE.md](./SETUP_STRIPE.md)
+- [SETUP_SOC2.md](./SETUP_SOC2.md)
+
+---
+
+## Component reference
+
+- [COMPONENTS_ADV.md](./COMPONENTS_ADV.md)
+
+---
+
+## Advanced
+
+- [advanced/APP_CHECK.md](./advanced/APP_CHECK.md)
+- [advanced/EMULATORS.md](./advanced/EMULATORS.md)
+- [advanced/COOKIE_REFERENCE.md](./advanced/COOKIE_REFERENCE.md)
+
+---
+
+## Already in MCP (`get_guideline`)
+
+Core (config, CI/CD, env, i18n, PWA, testing, themes), UI (components, layouts, routing, SEO), templates, functions, CRUD, CLI — use **`get_guideline`** instead of copying those docs into this tree.

@@ -1,0 +1,52 @@
+# Agent quick start (DoNotDev)
+
+**Read root `AGENTS.md` first** — it is the contract. This page is MCP setup + reference.
+
+## 1. MCP
+
+This repo ships MCP config (e.g. `.mcp.json`, `.cursor/mcp.json`). Enable the **donotdev** server in your IDE, then verify:
+
+- `list_features()` — should return framework packages.
+
+If that fails, check IDE docs for “MCP” / “Model Context Protocol” and ensure **Bun** can run `bunx @donotdev/mcp-server@latest`.
+
+## 2. First calls (in order)
+
+1. `list_features()`
+2. `get_phase_status()` (optional — see where you are)
+3. `start_phase(0)` — Phase 0: brainstorm / spec
+
+Use **`get_guideline("topic")`** for everything: package architecture, MCP-shipped setup docs (`SETUP_*`), WAI-WAY templates, and component reference. Use **`search_framework("keyword")`** to discover filenames.
+
+## 3. Five phases (summary)
+
+| Phase | `start_phase` | Skill | Output |
+|-------|----------------|-------|--------|
+| 0 | `0` | `/brainstorm` | Validated spec (e.g. `docs/HLD.md`) |
+| 1 | `1` | `/design` | Routes + `*Page.tsx` stubs |
+| 2 | `2` | `/design` | `entities/` models |
+| 3 | `3` | `/build` | Working pages (framework components) |
+| 4 | `4` | `/polish` | QA, i18n, config, ship checks |
+
+After each phase: **`dndev tc`** when you changed code, then **`complete_phase({ files, summary })`**, then user **`approve_phase()`** before the next phase.
+
+## 4. Environment and providers
+
+- Run **`dndev coach`** → fill **`.env`** in the **app** that runs (see repo `README` for layout) → **`dndev setup`** → **`dndev doctor`**.
+- Provider-specific steps: [SETUP_FIREBASE.md](./SETUP_FIREBASE.md), [SETUP_SUPABASE.md](./SETUP_SUPABASE.md), etc. in this folder.
+
+## 5. `lookup_symbol` (mandatory for `@donotdev`)
+
+Before importing from `@donotdev/*`, call **`lookup_symbol({ symbol: "ComponentOrHookName" })`**. Props come from the response — do not invent props.
+
+## 6. Project args
+
+If present, **`.dndev/args.json`** (from `dndev init`) scopes features and strictness. **`start_phase`** / **`complete_phase`** use it when configured.
+
+## 7. Where to look next
+
+- **Human + structure:** root **`README.md`**
+- **All setup guides:** [INDEX.md](./INDEX.md)
+- **WAI-WAY CLI narrative:** [../wai-way/WAI_WAY_CLI.md](../wai-way/WAI_WAY_CLI.md)
+
+**Start:** `list_features()` → `start_phase(0)`.
