@@ -1,6 +1,6 @@
 {
   "name": "@donotdev/mcp-server",
-  "version": "0.1.42",
+  "version": "0.1.44",
   "description": "MCP server for DoNotDev component type lookups",
   "type": "module",
   "private": false,
