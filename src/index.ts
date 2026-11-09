@@ -17,23 +17,23 @@ import {
 } from './config';
 
 // --- Tool modules ---
-import * as reload from './tools/reload';
-import * as lookupSymbol from './tools/lookup-symbol';
-import * as searchFramework from './tools/search-framework';
-import * as getGuideline from './tools/get-guideline';
-import * as listFeatures from './tools/list-features';
-import * as startPhase from './tools/start-phase';
-import * as completePhase from './tools/complete-phase';
 import * as approvePhase from './tools/approve-phase';
+import * as completePhase from './tools/complete-phase';
+import * as getGuideline from './tools/get-guideline';
 import * as getPhaseStatus from './tools/get-phase-status';
-import * as getProjectHistory from './tools/get-project-history';
-import * as runTypecheck from './tools/run-typecheck';
-import * as recordLesson from './tools/record-lesson';
-import * as scoreLesson from './tools/score-lesson';
-import * as setupCoach from './tools/setup-coach';
-import * as initImplementation from './tools/init-implementation';
-import * as updateProgress from './tools/update-progress';
 import * as getProgress from './tools/get-progress';
+import * as getProjectHistory from './tools/get-project-history';
+import * as initImplementation from './tools/init-implementation';
+import * as listFeatures from './tools/list-features';
+import * as lookupSymbol from './tools/lookup-symbol';
+import * as recordLesson from './tools/record-lesson';
+import * as reload from './tools/reload';
+import * as runTypecheck from './tools/run-typecheck';
+import * as scoreLesson from './tools/score-lesson';
+import * as searchFramework from './tools/search-framework';
+import * as setupCoach from './tools/setup-coach';
+import * as startPhase from './tools/start-phase';
+import * as updateProgress from './tools/update-progress';
 
 // Handle --version / -v before anything else
 if (process.argv.includes('--version') || process.argv.includes('-v')) {

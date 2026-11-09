@@ -1,7 +1,6 @@
 // packages/mcp-server/src/tools/get-project-history.ts
 
 import { readCaptainLog } from '../config';
-
 import type { ToolResult } from '../config';
 
 export const definition = {

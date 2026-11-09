@@ -10,7 +10,6 @@ import {
   generateImplementationContent,
   generateFromSpec,
 } from '../config';
-
 import type { ToolResult } from '../config';
 
 export const definition = {

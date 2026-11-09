@@ -1,7 +1,6 @@
 // packages/mcp-server/src/tools/get-progress.ts
 
 import { readImplementation, parseProgress, assertString } from '../config';
-
 import type { ToolResult } from '../config';
 
 export const definition = {

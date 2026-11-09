@@ -240,9 +240,11 @@ export function getProtocol(): Protocol {
   return _protocolCache;
 }
 
+/** Write-through: hooks and new sessions read protocol.json while the server runs. */
 export function saveProtocol(protocol: Protocol) {
   _protocolCache = protocol;
   _protocolDirty = true;
+  flushProtocol();
 }
 
 /** Atomic write — write to .tmp then rename to prevent truncated JSON on crash */
@@ -1117,6 +1119,19 @@ export interface SymbolEntry {
 /** Lazy symbol index: symbol name → { pkg, definition } */
 let _symbolIndex: Map<string, SymbolEntry> | null = null;
 
+/**
+ * Pre-built symbol index of a package: dist/ (published), src/ (monorepo,
+ * survives cacheout), types/src/ (core in the monorepo), then the package root
+ * (published core, whose dist/ is flattened to the root).
+ */
+export function findSymbolIndexFile(nodeModules: string, pkgName: string): string | null {
+  for (const dir of ['dist', 'src', join('types', 'src'), '.']) {
+    const candidate = join(nodeModules, pkgName, dir, 'symbol-index.json');
+    if (existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
 export function getSymbolIndex(nodeModules: string): Map<string, SymbolEntry> {
   if (_symbolIndex && _symbolIndex.size > 0) return _symbolIndex;
   _symbolIndex = new Map();
@@ -1135,23 +1150,7 @@ export function getSymbolIndex(nodeModules: string): Map<string, SymbolEntry> {
   // Check dist/ (published), then src/ (survives cacheout in monorepo)
   let usedPrebuilt = false;
   for (const pkgName of packagesToIndex) {
-    const distIndex = join(nodeModules, pkgName, 'dist', 'symbol-index.json');
-    const srcIndex = join(nodeModules, pkgName, 'src', 'symbol-index.json');
-    // Core has no single src/ - check subpackage dirs (types/src/ is the canonical location)
-    const subSrcIndex = join(
-      nodeModules,
-      pkgName,
-      'types',
-      'src',
-      'symbol-index.json'
-    );
-    const indexPath = existsSync(distIndex)
-      ? distIndex
-      : existsSync(srcIndex)
-        ? srcIndex
-        : existsSync(subSrcIndex)
-          ? subSrcIndex
-          : null;
+    const indexPath = findSymbolIndexFile(nodeModules, pkgName);
     if (!indexPath) continue;
     try {
       const raw = JSON.parse(readFileSync(indexPath, 'utf-8')) as Record<

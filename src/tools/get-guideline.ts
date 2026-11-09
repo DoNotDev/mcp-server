@@ -11,7 +11,6 @@ import {
   assertString,
   appendFrameworkRecoverHint,
 } from '../config';
-
 import type { ToolResult } from '../config';
 
 export const definition = {

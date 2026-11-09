@@ -1,7 +1,6 @@
 // packages/mcp-server/src/tools/reload.ts
 
 import { resetCaches } from '../config';
-
 import type { ToolResult } from '../config';
 
 export const definition = {

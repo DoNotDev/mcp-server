@@ -1,7 +1,6 @@
 // packages/mcp-server/src/tools/get-phase-status.ts
 
 import { getProtocol, PHASES } from '../config';
-
 import type { ToolResult } from '../config';
 
 export const definition = {

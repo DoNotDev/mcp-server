@@ -1,7 +1,6 @@
 // packages/mcp-server/src/tools/run-typecheck.ts
 
 import { PROJECT_ROOT, assertString } from '../config';
-
 import type { ToolResult } from '../config';
 
 export const definition = {

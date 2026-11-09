@@ -1,17 +1,16 @@
 // packages/mcp-server/src/tools/lookup-symbol.ts
 
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync } from 'fs';
 
 import {
   findNodeModules,
+  findSymbolIndexFile,
   getProtocol,
   saveProtocol,
   getSymbolIndex,
   assertString,
 } from '../config';
-
-import type { ToolResult } from '../config';
+import type { SymbolEntry, ToolResult } from '../config';
 
 export const definition = {
   name: 'lookup_symbol',
@@ -59,47 +58,10 @@ export function handler(args: Record<string, unknown> | undefined): ToolResult {
       ? `@donotdev/${(args!.package as string).replace(/^@donotdev\//, '')}`
       : null;
 
-  // Build combined result: symbol + Props in one response
+  // Build combined result: symbol + its props in one response
   const parts: string[] = [];
 
-  // When package is specified, search all entries for a match in that package
-  let entry = index.get(symbol);
-  if (preferredPkg && entry && entry.pkg !== preferredPkg) {
-    // Caller specified a package but the default entry is from another package.
-    // Scan the full index for an entry in the preferred package.
-    // getSymbolIndex uses first-write-wins, so we need to check the raw source.
-    const pkgIndex = join(
-      nodeModules,
-      preferredPkg,
-      'dist',
-      'symbol-index.json'
-    );
-    const pkgSrcIndex = join(
-      nodeModules,
-      preferredPkg,
-      'src',
-      'symbol-index.json'
-    );
-    const idxPath = existsSync(pkgIndex)
-      ? pkgIndex
-      : existsSync(pkgSrcIndex)
-        ? pkgSrcIndex
-        : null;
-    if (idxPath) {
-      try {
-        const raw = JSON.parse(readFileSync(idxPath, 'utf-8')) as Record<
-          string,
-          string
-        >;
-        if (raw[symbol]) {
-          entry = { pkg: preferredPkg, definition: raw[symbol] };
-        }
-      } catch {
-        /* fall through to default entry */
-      }
-    }
-  }
-
+  const entry = resolveEntry(index, nodeModules, symbol, preferredPkg);
   if (entry) {
     parts.push(
       `**Import:** \`import { ${symbol} } from '${entry.pkg}';\`\n\n` +
@@ -107,46 +69,17 @@ export function handler(args: Record<string, unknown> | undefined): ToolResult {
     );
   }
 
-  // Also include Props if looking up a component (not already a Props lookup)
+  // A component lookup also returns its props. Polymorphic components declare
+  // `XProps = XOwnProps & Omit<native props>`: XOwnProps holds the real props.
   if (!symbol.endsWith('Props')) {
-    let propsEntry = index.get(`${symbol}Props`);
-    // Same package-preference logic for Props
-    if (preferredPkg && propsEntry && propsEntry.pkg !== preferredPkg) {
-      const pkgIndex = join(
-        nodeModules,
-        preferredPkg,
-        'dist',
-        'symbol-index.json'
-      );
-      const pkgSrcIndex = join(
-        nodeModules,
-        preferredPkg,
-        'src',
-        'symbol-index.json'
-      );
-      const idxPath = existsSync(pkgIndex)
-        ? pkgIndex
-        : existsSync(pkgSrcIndex)
-          ? pkgSrcIndex
-          : null;
-      if (idxPath) {
-        try {
-          const raw = JSON.parse(readFileSync(idxPath, 'utf-8')) as Record<
-            string,
-            string
-          >;
-          const propsDef = raw[`${symbol}Props`];
-          if (propsDef) {
-            propsEntry = { pkg: preferredPkg, definition: propsDef };
-          }
-        } catch {
-          /* fall through */
-        }
-      }
+    for (const propsName of [`${symbol}Props`, `${symbol}OwnProps`]) {
+      const propsEntry = resolveEntry(index, nodeModules, propsName, preferredPkg);
+      if (propsEntry) parts.push(`\n\n---\n\n${propsEntry.definition}`);
     }
-    if (propsEntry) {
-      parts.push(`\n\n---\n\n${propsEntry.definition}`);
-    }
+  } else if (!symbol.endsWith('OwnProps')) {
+    const ownName = `${symbol.slice(0, -'Props'.length)}OwnProps`;
+    const ownEntry = resolveEntry(index, nodeModules, ownName, preferredPkg);
+    if (ownEntry) parts.push(`\n\n---\n\n${ownEntry.definition}`);
   }
 
   if (parts.length > 0) {
@@ -157,4 +90,28 @@ export function handler(args: Record<string, unknown> | undefined): ToolResult {
     content: [{ type: 'text', text: `Not found: ${symbol}` }],
     isError: true,
   };
+}
+
+/**
+ * Index entry for `name`. The merged index is first-write-wins across
+ * packages; when the caller names a package, that package's own index wins.
+ */
+function resolveEntry(
+  index: Map<string, SymbolEntry>,
+  nodeModules: string,
+  name: string,
+  preferredPkg: string | null
+): SymbolEntry | undefined {
+  const entry = index.get(name);
+  if (!preferredPkg || (entry && entry.pkg === preferredPkg)) return entry;
+  const idxPath = findSymbolIndexFile(nodeModules, preferredPkg);
+  if (idxPath) {
+    try {
+      const raw = JSON.parse(readFileSync(idxPath, 'utf-8')) as Record<string, string>;
+      if (raw[name]) return { pkg: preferredPkg, definition: raw[name] };
+    } catch {
+      /* fall through to the merged entry */
+    }
+  }
+  return entry;
 }

@@ -1,6 +1,6 @@
 {
   "name": "@donotdev/mcp-server",
-  "version": "0.1.44",
+  "version": "0.2.0",
   "description": "MCP server for DoNotDev component type lookups",
   "type": "module",
   "private": false,
@@ -27,11 +27,11 @@
     "type-check": "bunx tsc --noEmit"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.26.0"
+    "@modelcontextprotocol/sdk": "^1.32.2"
   },
   "devDependencies": {
-    "@types/node": "^22.13.14",
-    "typescript": "^5.8.2"
+    "@types/node": "^24.19.2",
+    "typescript": "^5.9.3"
   },
   "repository": {
     "type": "git",
@@ -53,5 +53,6 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org",
     "access": "public"
-  }
+  },
+  "peerDependencies": {}
 }

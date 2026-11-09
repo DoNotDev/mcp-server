@@ -3,7 +3,6 @@
 import { join } from 'path';
 
 import { findNodeModules, PACKAGES, extractReadmeSummary } from '../config';
-
 import type { ToolResult } from '../config';
 
 export const definition = {

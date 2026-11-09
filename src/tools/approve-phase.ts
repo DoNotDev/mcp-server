@@ -8,7 +8,6 @@ import {
   addLogEntry,
   updateImplementationPhase,
 } from '../config';
-
 import type { ToolResult } from '../config';
 
 export const definition = {

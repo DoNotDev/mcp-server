@@ -7,7 +7,6 @@ import {
   assertString,
   assertBoolean,
 } from '../config';
-
 import type { ToolResult } from '../config';
 
 export const definition = {
