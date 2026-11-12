@@ -32,7 +32,7 @@ export const definition = {
 
 export function handler(args: Record<string, unknown> | undefined): ToolResult {
   assertString(args?.symbol, 'symbol');
-  const symbol = args!.symbol as string;
+  const symbol = args?.symbol;
   const nodeModules = findNodeModules();
   if (!nodeModules)
     return {
@@ -53,9 +53,10 @@ export function handler(args: Record<string, unknown> | undefined): ToolResult {
   }
 
   const index = getSymbolIndex(nodeModules);
+  const pkgArg = args?.package;
   const preferredPkg =
-    typeof args!.package === 'string'
-      ? `@donotdev/${(args!.package as string).replace(/^@donotdev\//, '')}`
+    typeof pkgArg === 'string'
+      ? `@donotdev/${pkgArg.replace(/^@donotdev\//, '')}`
       : null;
 
   // Build combined result: symbol + its props in one response

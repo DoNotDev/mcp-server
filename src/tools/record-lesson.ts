@@ -9,7 +9,7 @@ import {
   readCaptainLog,
   trackLessonRecorded,
   assertString,
-  assertStringArray,
+  expectStringArray,
 } from '../config';
 import type { ToolResult } from '../config';
 
@@ -38,10 +38,10 @@ export const definition = {
 
 export function handler(args: Record<string, unknown> | undefined): ToolResult {
   assertString(args?.lesson, 'lesson');
-  const lesson = args!.lesson as string;
+  const lesson = args?.lesson;
   const tags =
     args?.tags != null
-      ? (assertStringArray(args.tags, 'tags'), args.tags as string[])
+      ? expectStringArray(args.tags, 'tags')
       : undefined;
   const protocol = getProtocol();
   const phaseTag =

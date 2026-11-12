@@ -1,6 +1,6 @@
 // packages/mcp-server/src/tools/run-typecheck.ts
 
-import { PROJECT_ROOT, assertString } from '../config';
+import { PROJECT_ROOT, expectString } from '../config';
 import type { ToolResult } from '../config';
 
 export const definition = {
@@ -24,7 +24,7 @@ export async function handler(
 ): Promise<ToolResult> {
   const pkg =
     args?.package != null
-      ? (assertString(args.package, 'package'), args.package as string)
+      ? expectString(args.package, 'package')
       : undefined;
   const { execFileSync } = await import('child_process');
 

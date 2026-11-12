@@ -54,7 +54,7 @@ function listMarkdownFiles(root: string, maxDepth: number): string[] {
 
 export function handler(args: Record<string, unknown> | undefined): ToolResult {
   assertString(args?.topic, 'topic');
-  const fullTopic = args!.topic as string;
+  const fullTopic = args?.topic;
   const [topic, section] = fullTopic.split(':');
   const sources: Array<{ dir: string; type: string }> = [
     { dir: MCP_GUIDELINES_DIR, type: 'MCP' },

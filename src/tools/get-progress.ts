@@ -1,6 +1,6 @@
 // packages/mcp-server/src/tools/get-progress.ts
 
-import { readImplementation, parseProgress, assertString } from '../config';
+import { readImplementation, parseProgress, expectString } from '../config';
 import type { ToolResult } from '../config';
 
 export const definition = {
@@ -22,7 +22,7 @@ export const definition = {
 export function handler(args: Record<string, unknown> | undefined): ToolResult {
   const section =
     args?.section != null
-      ? (assertString(args.section, 'section'), args.section as string)
+      ? expectString(args.section, 'section')
       : undefined;
 
   const content = readImplementation();

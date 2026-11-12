@@ -61,7 +61,7 @@ function scanMarkdownTree(
 
 export function handler(args: Record<string, unknown> | undefined): ToolResult {
   assertString(args?.query, 'query');
-  const query = (args!.query as string).toLowerCase();
+  const query = args?.query.toLowerCase();
   const results: string[] = [];
 
   scanMarkdownTree(MCP_GUIDELINES_DIR, 'MCP', query, results, 2);

@@ -16,8 +16,8 @@ import {
   appendLesson,
   readImplementation,
   parseProgress,
-  assertString,
-  assertStringArray,
+  expectString,
+  expectStringArray,
 } from '../config';
 import type { ToolResult } from '../config';
 
@@ -69,7 +69,7 @@ export function handler(args: Record<string, unknown> | undefined): ToolResult {
     : '';
   const files: string[] =
     args?.files != null
-      ? (assertStringArray(args.files, 'files'), args.files as string[])
+      ? expectStringArray(args.files, 'files')
       : [];
 
   // --- Validation (inline, replaces separate validate_phase) ---
@@ -184,7 +184,7 @@ export function handler(args: Record<string, unknown> | undefined): ToolResult {
   // Record lesson if provided
   const lesson =
     args?.lesson != null
-      ? (assertString(args.lesson, 'lesson'), args.lesson as string)
+      ? expectString(args.lesson, 'lesson')
       : undefined;
   if (lesson) {
     const phaseTag =
@@ -197,7 +197,7 @@ export function handler(args: Record<string, unknown> | undefined): ToolResult {
   // Store log data for captain's log (written on approve)
   const summary =
     args?.summary != null
-      ? (assertString(args.summary, 'summary'), args.summary as string)
+      ? expectString(args.summary, 'summary')
       : undefined;
   protocol.pendingLogData = {
     files_touched: safeFiles.length,

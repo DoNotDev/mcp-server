@@ -52,6 +52,25 @@ export const definition = {
   },
 };
 
+/** A user-supplied implementation section */
+type Section = { title: string; items: string[] };
+
+/**
+ * Validates the raw `sections` tool argument.
+ * why: item elements are not checked individually (existing contract — rendered verbatim).
+ */
+function assertSections(sections: unknown): asserts sections is Section[] {
+  if (!Array.isArray(sections)) throw new Error('sections must be an array');
+  for (const s of sections) {
+    if (!s || typeof s !== 'object')
+      throw new Error('each section must be an object');
+    if (!('title' in s) || typeof s.title !== 'string')
+      throw new Error('section.title must be a string');
+    if (!('items' in s) || !Array.isArray(s.items))
+      throw new Error('section.items must be an array');
+  }
+}
+
 export function handler(args: Record<string, unknown> | undefined): ToolResult {
   const sections = args?.sections;
   const fromSpec = args?.from_spec;
@@ -64,17 +83,7 @@ export function handler(args: Record<string, unknown> | undefined): ToolResult {
   if (force !== undefined && typeof force !== 'boolean') {
     throw new Error('force must be a boolean');
   }
-  if (sections !== undefined) {
-    if (!Array.isArray(sections)) throw new Error('sections must be an array');
-    for (const s of sections) {
-      if (!s || typeof s !== 'object')
-        throw new Error('each section must be an object');
-      if (typeof (s as Record<string, unknown>).title !== 'string')
-        throw new Error('section.title must be a string');
-      if (!Array.isArray((s as Record<string, unknown>).items))
-        throw new Error('section.items must be an array');
-    }
-  }
+  if (sections !== undefined) assertSections(sections);
 
   // Check if file already exists
   if (existsSync(IMPLEMENTATION_FILE) && !force) {
@@ -106,8 +115,8 @@ export function handler(args: Record<string, unknown> | undefined): ToolResult {
       };
     }
     finalSections = generated;
-  } else if (sections && (sections as any[]).length > 0) {
-    finalSections = sections as { title: string; items: string[] }[];
+  } else if (sections && sections.length > 0) {
+    finalSections = sections;
   } else {
     return {
       content: [

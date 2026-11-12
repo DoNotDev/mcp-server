@@ -444,17 +444,20 @@ const HARMFUL_MULTIPLIER = 4;
 /** Minimum confidence score (after decay) to include a lesson in context */
 const MIN_CONFIDENCE = 0.15;
 
+/** Lifecycle status stored in a lesson's scoring suffix */
+type LessonStatus =
+  | 'candidate'
+  | 'established'
+  | 'proven'
+  | 'deprecated'
+  | 'anti-pattern';
+
 /** Parse the scoring metadata suffix from a lesson line: {helpful:N,harmful:N,lastSeen:YYYY-MM-DD} */
 function parseLessonScore(line: string): {
   helpful: number;
   harmful: number;
   lastSeen: string | null;
-  status:
-    | 'candidate'
-    | 'established'
-    | 'proven'
-    | 'deprecated'
-    | 'anti-pattern';
+  status: LessonStatus;
 } {
   const match = line.match(
     /\{helpful:(\d+),harmful:(\d+),lastSeen:([^,}]+)(?:,status:([^}]+))?\}$/
@@ -465,7 +468,8 @@ function parseLessonScore(line: string): {
     helpful: parseInt(match[1]!),
     harmful: parseInt(match[2]!),
     lastSeen: match[3]!,
-    status: (match[4] as any) || 'candidate',
+    // why: status is written by this server's own scorer; the suffix text is trusted as-is (unchanged contract)
+    status: (match[4] as LessonStatus | undefined) || 'candidate',
   };
 }
 
@@ -1768,6 +1772,18 @@ export function assertString(
   if (typeof value !== 'string') {
     throw new Error(`Expected "${name}" to be a string, got ${typeof value}`);
   }
+}
+
+/** Asserts `value` is a string and returns it (expression form of assertString). */
+export function expectString(value: unknown, name: string): string {
+  assertString(value, name);
+  return value;
+}
+
+/** Asserts `value` is a string array and returns it (expression form of assertStringArray). */
+export function expectStringArray(value: unknown, name: string): string[] {
+  assertStringArray(value, name);
+  return value;
 }
 
 export function assertNumber(

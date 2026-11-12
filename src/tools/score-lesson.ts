@@ -28,8 +28,8 @@ export const definition = {
 export function handler(args: Record<string, unknown> | undefined): ToolResult {
   assertString(args?.lesson, 'lesson');
   assertString(args?.outcome, 'outcome');
-  const lessonSubstring = args!.lesson as string;
-  const outcome = args!.outcome as 'helpful' | 'harmful';
+  const lessonSubstring = args?.lesson;
+  const outcome = args?.outcome;
   if (outcome !== 'helpful' && outcome !== 'harmful') {
     return {
       content: [

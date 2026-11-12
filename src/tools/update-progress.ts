@@ -6,6 +6,7 @@ import {
   parseProgress,
   assertString,
   assertBoolean,
+  expectString,
 } from '../config';
 import type { ToolResult } from '../config';
 
@@ -37,11 +38,11 @@ export const definition = {
 export function handler(args: Record<string, unknown> | undefined): ToolResult {
   assertString(args?.item, 'item');
   assertBoolean(args?.done, 'done');
-  const itemMatch = args!.item as string;
-  const done = args!.done as boolean;
+  const itemMatch = args?.item;
+  const done = args?.done;
   const note =
     args?.note != null
-      ? (assertString(args.note, 'note'), args.note as string)
+      ? expectString(args.note, 'note')
       : undefined;
 
   const content = readImplementation();

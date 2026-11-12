@@ -19,7 +19,7 @@ import {
   loadArgs,
   getGotchasForPhase,
   assertNumber,
-  assertString,
+  expectString,
 } from '../config';
 import type { ToolResult } from '../config';
 
@@ -50,10 +50,10 @@ export function handler(args: Record<string, unknown> | undefined): ToolResult {
   flushSessionToCaptainLog();
 
   assertNumber(args?.phase, 'phase');
-  const phaseId = args!.phase as number;
+  const phaseId = args?.phase;
   const module =
     args?.module != null
-      ? (assertString(args.module, 'module'), args.module as string)
+      ? expectString(args.module, 'module')
       : undefined;
   const phase = PHASES.find((p) => p.id === phaseId);
   if (!phase) {

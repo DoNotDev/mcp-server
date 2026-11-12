@@ -42,7 +42,7 @@ export const definition = {
 
 export function handler(args: Record<string, unknown> | undefined): ToolResult {
   assertString(args?.topic, 'topic');
-  const topic = args!.topic as string;
+  const topic = args?.topic;
   const provider =
     typeof args?.provider === 'string' ? args.provider : undefined;
   const projectId =
