@@ -114,7 +114,7 @@ await auth.setCustomUserClaims(userId, {
 });
 ```
 
-**Supabase** — Set user metadata:
+**Supabase** — Set trusted app metadata (never editable `user_metadata`):
 ```sql
 -- In Supabase Dashboard → SQL Editor
 UPDATE auth.users SET raw_app_meta_data = raw_app_meta_data || '{"role": "admin"}' WHERE id = '<user-id>';
@@ -125,9 +125,69 @@ UPDATE auth.users SET raw_app_meta_data = raw_app_meta_data || '{"role": "admin"
 dndev make-admin <userId>
 ```
 
-**Note:** User must sign out and sign in again for role changes to take effect.
+**Session sync:** Explicitly refresh the affected browser's auth provider after a server-side role/subscription change (below), or sign out and in. The setter cannot remotely force another user's browser to refresh.
 
 **Used by:** CRUD access control, protected routes, field visibility filtering.
+
+---
+
+## Access Subscriptions (Independent of Billing)
+
+Auth owns `SubscriptionClaimsSchema`, `SubscriptionClaims`, `UserSubscription`, statuses and defaults in core; billing is a separate producer with compatibility re-exports. Persist `customClaims.subscription` only (Supabase: `app_metadata.subscription`), not a flat tier or second access store.
+
+Required: `tier: string`, `status: string`, `subscriptionEnd: ISO timestamp | null`, `updatedAt: ISO timestamp`. Optional: `features: string[]`, `isDefault: boolean`. Optional nullable `subscriptionId` / `customerId` and optional `cancelAtPeriodEnd` are deprecated billing projections, not generic grant requirements.
+
+### Server-only Supabase grant / revoke
+
+Authenticate and authorize the actor for the target `uid` **before** calling this helper. Never expose the secret or an unguarded claims endpoint to the browser.
+
+```typescript
+import * as v from 'valibot';
+import { SubscriptionClaimsSchema } from '@donotdev/core/server';
+import {
+  createServerClient,
+  SupabaseServerAuthAdapter,
+} from '@donotdev/supabase/server';
+
+async function writeAccess(
+  url: string,
+  serverSecret: string,
+  uid: string,
+  tier: 'pro' | 'free',
+): Promise<void> {
+  await new SupabaseServerAuthAdapter(createServerClient(url, serverSecret))
+    .setCustomClaims(uid, {
+      subscription: v.parse(SubscriptionClaimsSchema, {
+        tier,
+        status: 'active',
+        subscriptionEnd: null,
+        updatedAt: new Date().toISOString(),
+      }),
+    });
+}
+```
+
+Grant with `pro`, revoke with a complete `free` object and no fabricated billing IDs. Supabase merges top-level app metadata and replaces the supplied nested subscription, preserving unrelated keys. Omitting `subscription` leaves it unchanged; `{ subscription: null }` explicitly clears its value and resolves to free. Prefer the complete free object. Self-service claims setters block subscription writes.
+
+### Affected browser: explicit session sync
+
+```typescript
+import { getProvider } from '@donotdev/core';
+
+const token = await getProvider('auth').refreshToken();
+if (token === null) throw new Error('Auth refresh failed');
+```
+
+This provider method applies canonical state before successful resolution, updating `useAuth('userSubscription')`, `useAuth('userTier')`, guards and capabilities. It is not a `useAuth` refresh selector. Other users' browsers must perform their own refresh.
+
+### Semantics / trust
+
+- Absent/null subscription means deterministic free; malformed present claims fail/deny. No flat-tier migration fallback. Unknown/unconfigured tiers deny tier access.
+- Tier guards/provider `hasTier()` are hierarchical and status-blind, using raw tier. `isActive` checks only `status === 'active'`; `subscriptionEnd` is not auto-enforced. Legacy/custom status strings remain accepted. Revoke by lowering/removing tier, not changing status alone.
+- Supabase `app_metadata` alone supplies authorization claims/roles; editable `user_metadata` is profile-only. Signed-in baseline role is `user`.
+- SSR `AuthSessionSnapshot.userSubscription` is optional display-only request context. Initialization reads request-local identity/access; never write SSR identity into the singleton auth store. Protected server operations must use fresh trusted authorization.
+- The generated Next page proxy calls `getUser()` on every authenticated page request (network latency), forwards cookies bound to verified identity/claims, and removes unverified render identity on outage without clearing browser cookies. Never globally cache personal auth.
+- `getUser()` does not promise JWT revocation everywhere. Direct RLS `auth.jwt()` may remain stale until token refresh/expiry; immediate revocation needs authoritative policy at the protected server/database operation.
 
 ---
 

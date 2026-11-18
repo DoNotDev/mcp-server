@@ -41,12 +41,41 @@ During setup, the wizard detects your entities and generates SQL migrations.
 
 **What it does:**
 - Discovers entities (e.g. in `entities/` or your configured entity directory)
-- For each entity: `CREATE TABLE` with columns mapped from field types (text, number, boolean, timestamptz, uuid, jsonb, etc.)
-- Adds technical columns: `id` (uuid, default `gen_random_uuid()`), `user_id`, `created_at`, `updated_at` (with `DEFAULT now()`), `created_by_id`, `updated_by_id`, `status`
+- For each entity: `CREATE TABLE` / `ADD COLUMN IF NOT EXISTS` with the column type of the field's value kind (`describeEntity`): text → `text`, number → `numeric`, integer → `integer`, boolean → `boolean`, date → `date`, time → `time`, timestamp → `timestamptz`, json (images, files, price, address, multiselect…) → `jsonb`, reference (`validation.reference`, any type) → `uuid`. **New columns only**: an existing column is never altered.
+- A field with a custom type and no value shape (`validation.schema` / `validation.reference`) fails the generation, naming `Entity.field`
+- Adds technical columns: `id` (uuid, default `gen_random_uuid()`), `user_id`, `created_at`, `updated_at` (with `DEFAULT now()`), `created_by_id`, `updated_by_id`, `status` (default `'available'`)
+- Adds **CHECK constraints** from the entity (see below)
 - Enables **Row Level Security (RLS)** and creates policies so rows are scoped by `auth.uid() = user_id`
 - Adds a trigger so `updated_at` is set automatically on every `UPDATE`
 
 Output is written to `supabase/migrations/` as a timestamped `.sql` file.
+
+### CHECK constraints
+
+The database enforces the same value rules as the client, named `<table>_<column>_<rule>`:
+
+| Rule | CHECK | Drafts / deleted rows |
+|------|-------|-----------------------|
+| `required` | `status IN ('draft','deleted') OR (col IS NOT NULL [AND col <> ''])` | relaxed |
+| `length` | min / max length (text) | applied when filled |
+| `pattern` | `validation.pattern`, `tel` default (JS regex translated to PostgreSQL; unsupported syntax fails the generation) | applied when filled |
+| `options` | static options; multiselect `col <@ '[…]'::jsonb` | applied when filled |
+| `range` / `integer` | numeric bounds, whole numbers | applied when filled |
+| `json` | `jsonb_typeof` of json-kind columns | applied when filled |
+
+No CHECK for `email`, `url`, `validation.schema` internals, `conditions.required` or multi-field rules (keep those in app transaction functions).
+
+Constraints are added **`NOT VALID`**: existing rows are not checked, and no row is ever deleted or rewritten. Re-running is idempotent (definitions compared with `pg_get_constraintdef`); a constraint that differs is replaced only while not validated — a validated one is never dropped (WARNING). A column whose type cannot hold a rule (e.g. a legacy `text` column for images) is skipped with a NOTICE.
+
+Before validating, list the rows that break each constraint:
+
+```bash
+dndev db-check
+```
+
+It prints, per generated constraint, the ids of the violating rows (read-only). Fix them, then add a later migration with `ALTER TABLE <table> VALIDATE CONSTRAINT <name>;`.
+
+When a write breaks a constraint, the Supabase CRUD adapter turns the Postgres `23514` error into a `validation-failed` error with `details: { field, rule, constraint, i18nKey }` — the same i18n keys the client shows (`crud:childRows.required`, `crud:childRows.invalidValue`).
 
 ---
 

@@ -126,7 +126,7 @@ import { Reveal } from '@donotdev/components';
 
 ### Carousel
 
-Premium carousel component with lazy loading built-in. Features true infinite circular loop, hardware-accelerated animations, swipe/touch gestures, and autoplay with pause-on-hover.
+Premium carousel component with lazy loading built-in. Features true infinite circular loop, hardware-accelerated animations, swipe/touch gestures, and opt-in autoplay (pauses on hover/focus, off under reduced motion). Follows the WAI-ARIA carousel pattern: labelled region, focusable controls, off-screen slides inert, polite slide announcements (silent while autoplay rotates). All text is translatable through label props (English defaults). `infinite` (off by default) clones the edge slides: they come first in the server HTML and duplicate links.
 
 ```tsx
 import { Carousel } from '@donotdev/components';
@@ -140,10 +140,20 @@ import type { CarouselProps, CarouselRef } from '@donotdev/components';
   showArrows?: boolean
   showDots?: boolean
   showProgress?: boolean
-  autoplay?: boolean
-  autoplayInterval?: number // milliseconds
-  transitionDuration?: number // milliseconds
-  loop?: boolean
+  autoplay?: boolean // @default false
+  autoplayInterval?: number // milliseconds, @default 5000
+  infinite?: boolean // @default false
+  slidesToShow?: number | [number, number, number, number] // [mobile, tablet, laptop, desktop]
+  gap?: 'none' | 'tight' | 'medium' | 'large'
+  'aria-label'?: string // @default 'Carousel'
+  previousLabel?: string // @default 'Previous slide'
+  nextLabel?: string // @default 'Next slide'
+  playLabel?: string // @default 'Play carousel'
+  pauseLabel?: string // @default 'Pause carousel'
+  slideLabel?: (current: number, total: number) => string // @default `Slide ${current} of ${total}`
+  goToSlideLabel?: (index: number) => string // @default `Go to slide ${index}`
+  emptyLabel?: string // @default 'No items to display'
+  loadingLabel?: string // @default 'Loading carousel'
   // ... and more props
 />
 ```

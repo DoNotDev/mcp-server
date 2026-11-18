@@ -20,6 +20,27 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx  # From 'stripe listen' or Stripe Dashboard → 
 
 ---
 
+## Ownership and Session Sync
+
+Auth owns `SubscriptionClaimsSchema`, `SubscriptionClaims`, `UserSubscription`, statuses and defaults in core. Billing produces updates to that contract and retains compatibility re-exports from billing constants/schemas; auth decoding does not import billing. Persist only `customClaims.subscription` (Supabase: `app_metadata.subscription`), never a flat tier or duplicate access store.
+
+Generic access requires `tier: string`, `status: string`, `subscriptionEnd: ISO timestamp | null`, `updatedAt: ISO timestamp`, with optional `features` / `isDefault`. Optional nullable `subscriptionId` / `customerId` and optional `cancelAtPeriodEnd` are deprecated paid compatibility projections, not generic requirements. Billing's paid schema retains required billing fields; `updateUserSubscription` validates canonical claims and preserves supplied billing IDs; customer-less one-time checkout writes null, never a fabricated user-ID substitute. For generic grants/revokes without billing, use the server adapter and canonical schema shown in SETUP_AUTH.
+
+Tier guards/provider `hasTier()` compare raw tier hierarchically, without checking status or expiry. Unknown/unconfigured tiers deny; malformed present subscriptions fail/deny. `isActive` means only `status === 'active'`; `subscriptionEnd` is not auto-enforced. Existing legacy/custom status strings remain accepted; no new trial/grace policy. Revoke by writing a complete free object without invented billing IDs (preferred), or explicitly clearing `subscription` with null under Supabase's metadata merge. Omitting the key or only changing status does not revoke tier access.
+
+After a server/webhook update, explicitly sync the affected user's browser:
+
+```typescript
+import { getProvider } from '@donotdev/core';
+
+const token = await getProvider('auth').refreshToken();
+if (token === null) throw new Error('Auth refresh failed');
+```
+
+This is an existing provider method, not a `useAuth` refresh selector; successful resolution applies canonical state. The setter cannot remotely force another user's browser to refresh. Supabase page `getUser()` verification supplies fresh metadata but does not promise JWT revocation everywhere: direct RLS `auth.jwt()` may be stale until refresh/expiry. Immediate revocation requires authoritative policy at the protected operation.
+
+---
+
 ## Automatic UX (Zero Config)
 
 **The hook handles loading overlays automatically for redirect operations:**
@@ -30,7 +51,7 @@ const checkout = useStripeBilling('checkout', authState);
 const openCustomerPortal = useStripeBilling('openCustomerPortal', authState);
 
 // Checkout → Shows "Redirecting to Stripe" / "Initializing secure payment..."
-await checkout({ priceId: 'price_123', mode: 'payment' });
+await checkout({ billingConfigKey: 'pro_plan' });
 
 // Portal → Shows "Redirecting to Stripe" / "Opening billing portal..."
 await openCustomerPortal();
@@ -74,10 +95,13 @@ export const stripeFrontConfig: StripeFrontConfig = {
 export const stripeBackConfig: StripeBackConfig = {
   pro_plan: {
     type: 'StripeSubscription', // or 'StripePayment'
+    name: 'Pro',
     price: 2900, // In cents
+    currency: 'EUR',
     priceId: process.env.STRIPE_PRICE_PRO_PLAN!,
     tier: 'pro',
-    onPurchaseSuccess: async (userId, metadata) => { /* Grant features */ },
+    duration: '1month',
+    onSubscriptionCreated: async (userId, metadata) => { /* Optional server work */ },
   },
 };
 
